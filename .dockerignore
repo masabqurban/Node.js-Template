@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+.git
+.github
+.husky
+.vscode
+*.md
+openapi.json
+.env
+.env.*
+!.env.example

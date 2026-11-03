@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch cancels the run still in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, type check, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npm run format:check
+      - run: npm run build
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: nodejs-template:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Start the container and wait until it is healthy
+        run: |
+          docker run -d --name api -p 4000:4000 \
+            -e JWT_ACCESS_SECRET="$(openssl rand -base64 48)" nodejs-template:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:4000/api/v1/health; then exit 0; fi
+            sleep 1
+          done
+          docker logs api
+          exit 1
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      # Fails only on high or critical issues in production dependencies.
+      - run: npm audit --omit=dev --audit-level=high

@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # Weekly dependency updates, minor and patch grouped into one PR to stay quiet.
+  # Security fixes are opened as separate PRs as soon as an advisory is published.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Major TypeScript releases need the whole toolchain (typescript-eslint,
+      # tsx, editors) to catch up first. Upgrade deliberately, not via a bot.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly

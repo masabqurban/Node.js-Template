@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+openapi.json
+
+# env files (only the example is committed)
+.env*
+!.env.example
+
+*.log
+.DS_Store

@@ -1,0 +1,18 @@
+# Runs the API in a production-like container.
+#   docker compose up --build
+# Add your database (e.g. a `postgres` service) here when you connect one.
+services:
+  api:
+    build: .
+    ports:
+      - '${PORT:-4000}:4000'
+    environment:
+      NODE_ENV: production
+      # Required. Generate with: openssl rand -base64 48
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET in your shell or .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:4173}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
