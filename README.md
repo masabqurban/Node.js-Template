@@ -14,6 +14,7 @@ A production-grade **Node.js + TypeScript** REST API starter built on **Express 
 ## Contents
 
 - [Highlights](#highlights)
+- [Use this template](#use-this-template)
 - [Getting started](#getting-started)
 - [Scripts](#scripts)
 - [Project structure](#project-structure)
@@ -40,6 +41,42 @@ A production-grade **Node.js + TypeScript** REST API starter built on **Express 
 | **Architecture**  | Feature modules, a composition root, and storage-agnostic repositories; import boundaries enforced by ESLint                |
 | **Operations**    | Structured logs with request IDs (pino), liveness and readiness probes, graceful shutdown, non-root Docker image            |
 | **Quality**       | Strict TypeScript, ESLint (`strictTypeChecked`), Prettier, Vitest + supertest (44 tests, ~2s), GitHub Actions, Dependabot   |
+
+## Use this template
+
+**1. Create your repository.** Click **Use this template → Create a new repository** at the top of this page. Your new repository gets a clean history and no link back to this one. Or use the GitHub CLI:
+
+```bash
+gh repo create my-app --template masabqurban/Node.js-Template --private --clone
+cd my-app
+```
+
+Prefer no Git history at all? Run `npx degit masabqurban/Node.js-Template my-app`.
+
+**2. Install and run it.**
+
+```bash
+npm install
+cp .env.example .env
+# Replace JWT_ACCESS_SECRET with a random value, e.g.:
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+npm run dev    # http://localhost:4000/api/docs
+```
+
+**3. Make it yours.**
+
+- `package.json`: change `"name"` from `nodejs-template`.
+- The JWT issuer and audience in `src/lib/jwt.ts`, and the API title in `src/shared/openapi/document.ts`.
+- `CORS_ORIGINS` in `.env` to your frontend's URL.
+- Replace the copyright holder in `LICENSE` (or choose another license), and rewrite this README for your project.
+
+**4. Remove what you don't need.** The demo is there to show the patterns end to end. Keep the parts you'll build on and delete the rest:
+
+- **Add a database:** storage sits behind repository interfaces. Implement them with Prisma, Drizzle, MongoDB or any other driver and wire them in `src/container.ts`. See [Adding a database](#adding-a-database).
+- Demo data comes from `src/db/seed.ts` and only loads in development. Delete it, or set `SEED_DEMO_DATA=false`.
+- Delete a module by removing `src/modules/<name>/` and its mount in `src/app.ts`.
+
+**5. Turn on the repository settings.** In **Settings → Code security**, enable Dependabot alerts and private vulnerability reporting (`SECURITY.md` points reporters there). CI in `.github/workflows/` runs on your first push with no secrets required. Add branch protection on `main` that requires it to pass.
 
 ## Getting started
 
