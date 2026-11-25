@@ -277,15 +277,17 @@ The image is multi-stage, contains production dependencies only, runs as the `no
 | `API_DOCS_ENABLED`                        | on outside production | Swagger UI and `openapi.json`                        |
 | `SEED_DEMO_DATA`                          | on in development     | Placeholder users; rejected in production            |
 
-## Use with the React.js Template
+## Use with the React.js and React Native Templates
 
-This API implements the exact contract the [React.js Template](https://github.com/masabqurban/React.js-Template) uses, including endpoints, envelopes, pagination and error codes:
+This API implements the exact contract the [React.js Template](https://github.com/masabqurban/React.js-Template) and [React Native Template](https://github.com/masabqurban/React-Native-Template) use, including `/api/v1/*` endpoints, envelopes, pagination, RBAC and error codes:
 
 ```bash
-# here
-CORS_ORIGINS=http://localhost:5173 npm run dev
+# here (include :8081 if also running React-Native-Template on web)
+CORS_ORIGINS=http://localhost:5173,http://localhost:8081 npm run dev
 # in React.js-Template
 VITE_API_URL=http://localhost:4000/api/v1 npm run dev
+# or in React-Native-Template
+EXPO_PUBLIC_API_URL=http://localhost:4000/api/v1 npm start
 ```
 
 The React app's mock API switches off automatically, and sign-in, the dashboard, user management and session refresh all run against this server.
