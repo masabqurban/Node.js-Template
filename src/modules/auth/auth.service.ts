@@ -49,7 +49,7 @@ export function createAuthService({
   async function issueSession(user: UserRecord, familyId: string = randomUUID()) {
     const issuedAt = now();
     const refreshToken = randomToken();
-    await sessions.create({
+    const created = await sessions.create({
       id: randomUUID(),
       familyId,
       userId: user.id,
@@ -58,8 +58,20 @@ export function createAuthService({
       revokedAt: null,
       createdAt: issuedAt,
     });
+    if (!created) {
+      throw AppError.unauthorized(
+        'This session has ended. Please sign in again.',
+        'SESSION_REVOKED',
+      );
+    }
     const access = await tokens.sign({ sub: user.id, sid: familyId, role: user.role }, issuedAt);
     const updated = (await users.update(user.id, { lastActiveAt: issuedAt })) ?? user;
+    if (await sessions.isFamilyRevoked(familyId, now())) {
+      throw AppError.unauthorized(
+        'This session has ended. Please sign in again.',
+        'SESSION_REVOKED',
+      );
+    }
     return {
       accessToken: access.token,
       accessTokenExpiresAt: access.expiresAt.toISOString(),
@@ -105,8 +117,7 @@ export function createAuthService({
       if (!session) throw AppError.unauthorized('Invalid refresh token.', 'TOKEN_INVALID');
 
       const time = now();
-      // `revoke` is atomic: if it was already used, this is a replay.
-      if (session.revokedAt || !(await sessions.revoke(session.id, time))) {
+      const handleReuse = async (): Promise<never> => {
         await sessions.revokeFamily(session.familyId, time);
         logger.warn(
           { userId: session.userId },
@@ -116,13 +127,18 @@ export function createAuthService({
           'This session has ended. Please sign in again.',
           'TOKEN_REUSED',
         );
-      }
+      };
+
+      if (session.revokedAt) return handleReuse();
+      // Check expiry before revoking so retrying an expired token doesn't look like reuse.
       if (session.expiresAt <= time) {
         throw AppError.unauthorized(
           'This session has expired. Please sign in again.',
           'TOKEN_EXPIRED',
         );
       }
+      // `revoke` is atomic: if it was already used, this is a replay.
+      if (!(await sessions.revoke(session.id, time))) return handleReuse();
 
       const user = await users.findById(session.userId);
       if (user?.status !== 'active') {

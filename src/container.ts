@@ -41,7 +41,7 @@ export function createContainer(config: Config, overrides: ContainerOverrides = 
 
   const repositories: Repositories = {
     users: overrides.repositories?.users ?? createInMemoryUserRepository(now),
-    sessions: overrides.repositories?.sessions ?? createInMemorySessionRepository(),
+    sessions: overrides.repositories?.sessions ?? createInMemorySessionRepository(now),
   };
 
   const hasher = createPasswordHasher(config.PASSWORD_HASH_COST_LOG2);
